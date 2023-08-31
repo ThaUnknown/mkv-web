@@ -1,0 +1,17 @@
+{
+  "name": "mkv-web",
+  "version": "1.0.0",
+  "description": "Play MKV videos in web browsers which don't support them!",
+  "type": "module",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "ThaUnknown",
+  "license": "MIT",
+  "dependencies": {
+    "ebml-iterator": "^1.0.3",
+    "fast-readable-async-iterator": "^1.1.1"
+  }
+}

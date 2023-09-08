@@ -54,7 +54,7 @@ const readChildren = (parent = {}, start = 0, multiple = true) => {
   return { ...parent, Children: multiple ? children : children.reduce((acc, cur) => ({...acc, ...cur}), {})}
 }
 
-const readSeekHead = async (seekHeadStream, segmentStart, createStream = () => {}) => {
+const readSeekHead = async (seekHeadStream, segmentStart, blob) => {
   const seekHeadTags = await readUntilTag(seekHeadStream, EbmlTagId.SeekHead, [EbmlTagId.SeekHead])
   if (!seekHeadTags) throw new Error('Couldn\'t find seek head')
   const seekHead = readChildren(seekHeadTags)
@@ -70,8 +70,8 @@ const readSeekHead = async (seekHeadStream, segmentStart, createStream = () => {
   }
 
   if (transformedHead.SeekHead) {
-    const seekHeadStream = createStream(transformedHead.SeekHead + segmentStart)
-    return readSeekHead(seekHeadStream, segmentStart)
+    const seekHeadStream = blob.slice(transformedHead.SeekHead + segmentStart).stream()
+    return readSeekHead(seekHeadStream, segmentStart, blob)
   } else {
     return transformedHead
   }
@@ -111,7 +111,7 @@ export class Metadata {
     if (!this.seekHead) {
       console.log(this.segment)
       const seekHeadStream = this.blob.slice(this.segment.absoluteStart + this.segment.tagHeaderLength).stream()
-      const seekHead = await readSeekHead(seekHeadStream, 0, (start)=>this.blob.slice(start).stream())
+      const seekHead = await readSeekHead(seekHeadStream, 0, this.blob)
       this.seekHead = seekHead // Note, this is already parsed in readSeekHead, should probably change this?
       return this.seekHead
     }

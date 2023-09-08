@@ -58,8 +58,6 @@ const readSeekHead = async (seekHeadStream, segmentStart, blob) => {
   const seekHeadTags = await readUntilTag(seekHeadStream, EbmlTagId.SeekHead, [EbmlTagId.SeekHead])
   if (!seekHeadTags) throw new Error('Couldn\'t find seek head')
   const seekHead = readChildren(seekHeadTags)
-  // Determines if there is a second SeekHead referenced by the first SeekHead.
-  // Note: If true, the first must *only* contains a reference to the second, so no other tags will be in the first.
 
   const transformedHead = {}
 
@@ -69,9 +67,13 @@ const readSeekHead = async (seekHeadStream, segmentStart, blob) => {
     transformedHead[tagName] = child.Seek.SeekPosition
   }
 
+  // Determines if there is a second SeekHead referenced by the first SeekHead.
+  // See: https://www.matroska.org/technical/ordering.html#seekhead
+  // Note: If true, the first *must* contain a reference to the second, but other tags can be in the first.
   if (transformedHead.SeekHead) {
     const seekHeadStream = blob.slice(transformedHead.SeekHead + segmentStart).stream()
-    return readSeekHead(seekHeadStream, segmentStart, blob)
+    const secondSeekHead = await readSeekHead(seekHeadStream, segmentStart, blob)
+    return {...secondSeekHead, ...transformedHead}
   } else {
     return transformedHead
   }
@@ -139,7 +141,7 @@ export class Metadata {
 }
 
 const main = async () => {
-  const metadata = new Metadata(await openAsBlob('./media/video1.webm'))
+  const metadata = new Metadata(await openAsBlob('./media/video2.webm'))
   const Segment = await metadata.getSegment()
   const SeekHead = await metadata.getSeekHead()
   const Info = await metadata.readSeekedTag('Info', false)

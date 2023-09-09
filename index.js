@@ -38,8 +38,7 @@ const readChildren = (parent = {}, start = 0) => {
     if (Child.Children && Child.Children.length > 0) {
       const subChildren = readChildren(Child)
       delete subChildren._children
-      childOutput[childName] = subChildren.Children
-        .reduce((acc, cur) => ({ ...acc, ...cur }), {})
+      childOutput[childName] = subChildren.Children.reduce((acc, cur) => ({ ...acc, ...cur }), {})
     } else {
       if (Child.type === EbmlElementType.String || Child.type === EbmlElementType.UTF8 || Child.type == null) {
         childOutput[childName] = Child.data.toString()
@@ -69,7 +68,7 @@ const readSeekHead = async (seekHeadStream, segmentStart, blob) => {
   const transformedHead = {}
 
   for (const child of seekHead.Children) {
-    if (!child.Seek) return // CRC32 elements will appear, currently we don't check them
+    if (!child.Seek) continue // CRC32 elements will appear, currently we don't check them
     const tagName = EbmlTagId[Tools.readUnsigned(child.Seek.SeekID)]
     transformedHead[tagName] = child.Seek.SeekPosition
   }

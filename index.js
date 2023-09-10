@@ -6,11 +6,11 @@ import 'fast-readable-async-iterator'
 
 import { openAsBlob } from 'node:fs'
 
-const readUntilTag = async (stream, tagId) => {
+const readUntilTag = async (stream, tagId, bufferTag = true) => {
   if (!stream) throw new Error('stream is required')
   if (!tagId) throw new Error('tagId is required')
 
-  const decoder = new EbmlIteratorDecoder({ stream, bufferTagIds: tagId ? [tagId] : [] })
+  const decoder = new EbmlIteratorDecoder({ stream, bufferTagIds: bufferTag ? [tagId] : [] })
 
   for await (const tag of decoder) {
     const offset = decoder._currentBufferOffset
@@ -102,7 +102,7 @@ export class Metadata {
 
   async getSegment () {
     if (!this.segment) {
-      const segment = await readUntilTag(this.blob.stream(), EbmlTagId.Segment)
+      const segment = await readUntilTag(this.blob.stream(), EbmlTagId.Segment, false)
       this.segment = readChildren(segment)
       this.segmentStart = segment.absoluteStart + segment.tagHeaderLength
       return this.segment
